@@ -4,7 +4,6 @@ import fs from "fs";
 import {
   uploadAudio,
   transcribe,
-  transcribeFromUploads,
   uploadAndTranscribe,
 } from "../controllers/transcriptionController";
 import { config } from "../config/env";
@@ -17,16 +16,14 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// /api/transcription/upload
+// Routes
+// api/transcription/upload
 router.post("/upload", uploadAudio);
 
-// /api/transcription/transcribe
+// api/transcription/transcribe
 router.post("/transcribe", transcribe);
 
-// /api/transcription/transcribe-uploads
-// router.get("/transcribe-uploads", transcribeFromUploads);
-
-// /api/transcription/transcribe-uploads
+// api/transcription/transcribe-uploads
 router.post("/transcribe-uploads", uploadAndTranscribe);
 
 export default router;
