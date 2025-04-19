@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import path from "path";
 import fs from "fs";
 import busboy from "busboy";
-import { transcribeAudio } from "../utils/transcription";
+import { transcribeAudio } from "./../utils/transcription";
 
 export const uploadAudio = async (
   req: Request,
