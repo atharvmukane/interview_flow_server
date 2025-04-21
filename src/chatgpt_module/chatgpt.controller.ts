@@ -189,8 +189,8 @@ export const generateQuestions = async (
 ) => {
     try {
 
-        console.log("BODY:", req.body);       // ✅ Should now be present
-        console.log("FILES:", req.files);     // ✅ Should now be present
+        // console.log("BODY:", req.body);       // ✅ Should now be present
+        // console.log("FILES:", req.files);     // ✅ Should now be present
 
         const resumeFile = req.files['resume'];
 
@@ -217,37 +217,80 @@ export const generateQuestions = async (
         const parsed = await pdfParse(resumeFile.data);
         const resumeText = parsed.text;
 
+        const prompt1 = `
+You are a professional technical interviewer.
 
-        // Compose prompt
-        const prompt = `
-Based on the following information, generate 5 personalized interview questions:
+Generate 5 personalized interview questions for a candidate applying to the following role. The questions should be:
 
-Resume: ${resumeText}
+- Deeply technical and aligned with the job title and description.
+- Designed to test real-world application of the listed skills.
+- Relevant to the responsibilities and domain of the company/industry.
+- Avoid generic or surface-level questions.
+
+Do NOT include any questions based on past experience or resume — focus only on the job itself.
+
 Job Title: ${jobTitle}
 Company: ${company}
 Industry: ${industry}
 Job Description: ${jobDescription}
-Skills: ${skills}
+Candidate's Skills: ${skills}
 
-The questions should be relevant to the job title and challenge the candidate's experience.
+Return only the list of questions with no explanation.
 `;
 
-        const completion = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
+        const completion1 = await openai.chat.completions.create({
+            model: "gpt-4",
             messages: [
                 { role: "system", content: "You are an expert technical interviewer." },
-                { role: "user", content: prompt },
+                { role: "user", content: prompt1 },
             ],
         });
 
-        const responseText = completion.choices[0].message?.content;
+        const response1Text = completion1.choices[0].message?.content;
 
-        if (responseText) {
+        // 2nd 
+
+        // Compose prompt
+        const prompt2 = `
+        You're acting as a professional technical interviewer.
+        
+        Step 1: Review the following job description, title, and required skills. Based on these, generate 3-4 technical interview questions that challenge the candidate’s ability to succeed in the role. The questions should reflect real-world tasks, problem-solving, and domain-specific knowledge.
+        
+        Step 2: Then, review the candidate’s resume and add 1 or 2 questions that are specific to their previous experience, projects, or achievements.
+        
+        --- JOB DETAILS ---
+        Job Title: ${jobTitle}
+        Company: ${company}
+        Industry: ${industry}
+        Job Description: ${jobDescription}
+        Candidate's Skills: ${skills}
+        
+        --- RESUME ---
+        ${resumeText}
+        
+        Final Output:
+        Return exactly 5 questions.
+        List the questions only — no extra explanation.
+        `;
+
+        const completion2 = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [
+                { role: "system", content: "You are an expert technical interviewer." },
+                { role: "user", content: prompt2 },
+            ],
+        });
+
+        const response2Text = completion2.choices[0].message?.content;
+
+
+
+        if (response2Text) {
             return res.status(200).json({
                 message: "responseReceived",
                 success: true,
                 result: {
-                    messages: responseText,
+                    messages: response2Text,
                     sessionId: sessionId,
                     user: user,
                 },

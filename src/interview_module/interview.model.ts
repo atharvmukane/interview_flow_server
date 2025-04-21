@@ -3,80 +3,76 @@ import { ObjectId } from 'mongodb';
 import { FlowUser } from './../userModule/user.model';
 // import { LoyaltyLevel } from '../loyaltyProgramModule/loyalty.model';
 
-/**
- * Schema for interview questions, answers and analysis
- * 
- * Stores the structured data for each question in the interview,
- * including the AI-generated question, candidate's answer, and
- * any analysis of the response.
- */
+export enum InterviewStatus {
+    Upcoming = 'Upcoming',
+    Started = 'Started',
+    Completed = 'Completed',
+}
+
 class InterviewQAA {
     @prop()
-    index: number;  // Order of the question in the interview
+    index: number;
 
     @prop()
-    question: string;  // The AI-generated interview question
+    question: string;
 
     @prop()
-    answer: string;  // Candidate's response (transcribed from audio)
+    answer: string;
 
     @prop()
-    analaysis: {  // Analysis of the candidate's response
+    duration: string;
+
+    @prop()
+    analaysis: {
         [key: string]: any;
     };
 }
 
-/**
- * Interview model for storing interview sessions
- * 
- * Contains all details about an interview including:
- * - Job and company information
- * - Resume data and extracted text
- * - Generated interview questions
- * - Candidate's recorded responses
- */
 export class Interview {
-    readonly _id: ObjectId;  // Unique identifier for the interview
+    readonly _id: ObjectId;
 
-    readonly createdAt: Date;  // When the interview was created
+    readonly createdAt: Date;
 
-    readonly updatedAt: Date;  // When the interview was last updated
-
-    @prop({})
-    company: string;  // Company name for the job position
+    readonly updatedAt: Date;
 
     @prop({})
-    industry: string;  // Industry sector for contextually relevant questions
+    company: string;
+
+    @prop({})
+    industry: string;
+
+    @prop({})
+    duration: string;
 
     @prop({ ref: () => FlowUser })
-    user: Ref<FlowUser>;  // User (candidate) taking the interview
+    user: Ref<FlowUser>;
 
     @prop()
-    date: Date;  // Scheduled date for the interview
+    date: Date;
 
     @prop()
-    jobTitle: string;  // Position the candidate is interviewing for
+    jobTitle: string;
 
     @prop({})
-    jobDescription: string;  // Detailed job description for context
+    jobDescription: string;
 
     @prop()
-    skills: string[];  // Required skills for the position
+    skills: string[];
 
     @prop({ type: InterviewQAA })
-    interviewQAA: InterviewQAA[];  // Questions, answers and analysis
+    interviewQAA: InterviewQAA[];
 
     @prop()
-    resumeFilePath: string;  // Path to the uploaded resume file
+    resumeFilePath: string;
 
     @prop()
-    resumeText: string;  // Extracted text content from the resume
+    resumeText: string;
 
-    @prop({ default: true })
-    isCompleted: boolean;  // Whether the interview is complete
+    @prop({ enum: InterviewStatus, default: InterviewStatus.Upcoming })
+    interviewStatus: InterviewStatus;
 
     @prop({ default: false })
-    isDeleted: boolean;  // Soft delete flag
+    isDeleted: boolean;
 }
 
 export const InterviewModel = getModelForClass(Interview, {

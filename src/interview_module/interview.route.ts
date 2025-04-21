@@ -1,6 +1,6 @@
 import { verifyJwtToken } from "./../utils/middleware/verify-jwt-token";
 import {
-    addInterview, getInterviews,
+    addInterview, endInterviewSession, getInterviews,
     saveRecording,
     //  saveRecording
 } from "./interview.controller";
@@ -16,6 +16,9 @@ InterviewRouter.get("/getInterviews", verifyJwtToken, getInterviews);
 
 // api/interview/saveRecording
 InterviewRouter.post("/saveRecording", saveRecording);
+
+// api/interview/endInterviewSession
+InterviewRouter.put("/endInterviewSession", endInterviewSession);
 
 
 // // api/transcription/saveRecording

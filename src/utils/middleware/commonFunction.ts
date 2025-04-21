@@ -39,3 +39,25 @@ export function getMinutes(duration: any) {
     return 0;
   }
 }
+
+const junkResponses = [
+  "thank you",
+  "thank you!",
+  "thank you so much",
+  "thank you so much!",
+  "thank you so much for watching",
+  "thank you so much for watching!",
+  "alright",
+  "alright!",
+  "okay",
+  "okay!",
+  "okay thank you",
+  "okay thank you!",
+];
+
+export const isJunk = (text: string) => {
+  const cleaned = text.trim().toLowerCase();
+  return (
+    cleaned.length < 4 || junkResponses.includes(cleaned)
+  );
+};

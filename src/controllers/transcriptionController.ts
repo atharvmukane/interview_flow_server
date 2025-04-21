@@ -31,8 +31,8 @@ export const uploadAudio = async (
     }
 
     // Get the uploaded file (either by field name or first file)
-    const audioFile = req.files.audio || Object.values(req.files)[0] as UploadedFile;
-    
+    const audioFile: any = req.files.audio || Object.values(req.files)[0] as UploadedFile;
+
     // Generate unique filename using timestamp
     const fileName = `${Date.now()}-${audioFile.name}`;
     const saveFilePath = path.join(uploadDir, fileName);
@@ -40,7 +40,7 @@ export const uploadAudio = async (
     console.log(`Uploading: ${audioFile.name}, mime: ${audioFile.mimetype}`);
 
     // Move the file to the upload directory using express-fileupload
-    audioFile.mv(saveFilePath, (err) => {
+    audioFile.mv(saveFilePath, (err: any) => {
       if (err) {
         console.error("Error saving file:", err);
         res.status(500).json({ error: "Failed to save the uploaded file" });
@@ -130,8 +130,8 @@ export const uploadAndTranscribe = async (
     }
 
     // Get the uploaded file (either by field name or first file)
-    const audioFile = req.files.audio || Object.values(req.files)[0] as UploadedFile;
-    
+    const audioFile: any = req.files.audio || Object.values(req.files)[0] as UploadedFile;
+
     // Generate unique filename using timestamp
     const fileName = `${Date.now()}-${audioFile.name}`;
     const saveFilePath = path.join(uploadDir, fileName);
@@ -139,7 +139,7 @@ export const uploadAndTranscribe = async (
     console.log(`Uploading: ${audioFile.name}, mime: ${audioFile.mimetype}`);
 
     // Move the file to the upload directory using express-fileupload
-    audioFile.mv(saveFilePath, async (err) => {
+    audioFile.mv(saveFilePath, async (err: any) => {
       if (err) {
         console.error("Error saving file:", err);
         res.status(500).json({ error: "Failed to save the uploaded file" });
