@@ -21,6 +21,9 @@ InterviewRouter.post("/saveRecording", saveRecording);
 // api/interview/endInterviewSession
 InterviewRouter.put("/endInterviewSession", endInterviewSession);
 
+// api/interview/generateAnswerPrompt
+InterviewRouter.post("/generateAnswerPrompt", generateAnswerPrompt);
+
 
 // // api/transcription/saveRecording
 // InterviewRouter.post("/saveRecording", saveRecording);
