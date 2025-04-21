@@ -10,7 +10,7 @@ import { uploadToS3Bucket } from "../utils/generic/fileUpload";
 
 import axios from "axios";
 import { transcribeAudio } from "../utils/transcription";
-import { isJunk } from "../utils/middleware/commonFunction";
+import { generateQaHistory, isJunk } from "../utils/middleware/commonFunction";
 
 // Initialize the OpenAI client for interview question generation
 const openai = new OpenAI({
@@ -267,7 +267,7 @@ export const getInterviews = async (
 
 
 export async function getResponseAnalysisFromChatGPT(data: any): Promise<any> {
-    const { transcript, jobTitle, interviewQuestion, duration } = data;
+    const { transcript, jobTitle, interviewQuestion, duration, interviewId, questionIndex } = data;
 
     if (!transcript || !jobTitle || !interviewQuestion || !duration) {
         return {
@@ -277,12 +277,26 @@ export async function getResponseAnalysisFromChatGPT(data: any): Promise<any> {
         };
     }
 
-    const prompt = `
+    let prompt = `[Session ID: ${interviewId}]
+
+    `;
+
+    if (questionIndex == 0) {
+
+        prompt = prompt + `
+
   You are an expert technical interviewer. Analyze the following candidate's answer for the job role of "${jobTitle}".
 
   Speak directly to the user, as if you're giving them feedback about their own performance. Use "you" instead of "the candidate". Keep the tone constructive, helpful, and clear.
 
-   Question:
+  There will be multiple questions ahead. Starting now:
+  
+  `
+    }
+
+    prompt = prompt + `
+    
+    Question:
   "${interviewQuestion}"
   
   User's Answer:
@@ -349,6 +363,7 @@ Provide 2-3 tags — not necessarily 3. Do not give contradictory labels. Each t
             result: parsedOutput,
             message: 'Analysis successful',
         };
+
     } catch (error: any) {
         console.error('OpenAI API error:', error.message);
         return {
@@ -394,6 +409,8 @@ export const saveRecording = async (req: Request, res: Response) => {
             jobTitle: interview.jobTitle,
             interviewQuestion: interview.interviewQAA[questionIndex].question,
             duration: duration,
+            interviewId: interviewId,
+            questionIndex: questionIndex,
         });
 
         if (analysisResponse['result']) {
@@ -488,6 +505,8 @@ export const uploadAndTranscribe = async (
 
 
 
+
+
 export const endInterviewSession = async (
     req: any,
     res: Response,
@@ -496,10 +515,64 @@ export const endInterviewSession = async (
     try {
         let { user, interviewId, totalDuration } = req.body;
 
+        const existInterview = await InterviewModel.findById(interviewId);
+
+        let qaHistory;
+
+        if (existInterview) {
+            qaHistory = generateQaHistory(existInterview.interviewQAA);
+        }
+
+        const prompt = `
+        You are an experienced technical interviewer reviewing an entire mock interview session.
+        
+        Below is a list of interview questions and the candidate's answers from session ID: ${interviewId}.
+        
+        Based on this overall performance:
+        - Provide a single **evaluation term or short phrase** (e.g., "Exceptional", "Can improve", "Average", "High potential").
+        - Also provide a **numeric rating out of 10** (e.g., 7.0, 8.5, 9.2), based on the candidate’s rating for each answer provided
+        - Do NOT repeat the questions or answers.
+        - Return the response in **strict JSON format** only.
+        
+        Here is the interview session:
+        
+        ${qaHistory}
+        
+        Expected JSON format:
+        {
+          "evaluation": "[Your term here]",
+          "rating": [Your numeric rating here]
+        }
+        `;
+        // - Also provide a **numeric rating out of 10** (e.g., 7.0, 8.5, 9.2), based on the candidate’s rating for each answer provided
+        // - Also provide a **numeric rating out of 10** (e.g., 7.0, 8.5, 9.2), based on the candidate’s clarity, technical depth, relevance, communication, and fit for the role.
+
+        const response = await axios.post(
+            'https://api.openai.com/v1/chat/completions',
+            {
+                model: 'gpt-4',
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0.7,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        const gptOutput = response.data.choices[0].message.content;
+
+        const parseData = JSON.parse(gptOutput);
+
         const interview = await InterviewModel.findByIdAndUpdate(interviewId, {
             interviewStatus: InterviewStatus.Completed,
             duration: totalDuration,
+            rating: parseData['rating'],
+            overallSuccess: parseData['evaluation'],
         });
+
 
         return res.status(200).json({
             message: "Interview closed successfully",

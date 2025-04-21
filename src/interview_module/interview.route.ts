@@ -4,6 +4,7 @@ import {
     saveRecording,
     //  saveRecording
 } from "./interview.controller";
+import { runPythonScript } from "./utils/pythonRunner";
 
 const express = require("express");
 export const InterviewRouter = express.Router();
@@ -23,3 +24,16 @@ InterviewRouter.put("/endInterviewSession", endInterviewSession);
 
 // // api/transcription/saveRecording
 // InterviewRouter.post("/saveRecording", saveRecording);
+
+InterviewRouter.post('/nlpGenerateQuestion', async (req: Request, res: Response) => {
+    try {
+        const payload = req.body;
+        const result = await runPythonScript(payload);
+
+        console.log(result);
+        // res.status(200).json({ success: true, questions: result.questions });
+    } catch (err) {
+        console.log(err);
+        // res.status(500).json({ success: false, error: err.message });
+    }
+});

@@ -61,3 +61,12 @@ export const isJunk = (text: string) => {
     cleaned.length < 4 || junkResponses.includes(cleaned)
   );
 };
+
+
+export function generateQaHistory(qaList: any): string {
+  return qaList.map((item: any) => {
+    const qIndex = item.index + 1; // Q1, Q2, ...
+    return `Q${qIndex}: ${item.question}\nA${qIndex}: ${item.answer}\nR${qIndex}: ${item.analaysis.rating}`;
+  }).join('\n');
+}
+

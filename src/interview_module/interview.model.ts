@@ -66,6 +66,12 @@ export class Interview {
     resumeFilePath: string;
 
     @prop()
+    rating: Number;
+
+    @prop()
+    overallSuccess: string;
+
+    @prop()
     resumeText: string;
 
     @prop({ enum: InterviewStatus, default: InterviewStatus.Upcoming })
