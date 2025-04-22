@@ -601,37 +601,50 @@ export const generateAnswerPrompt = async (
     try {
         let { user, interviewId, questionIndex } = req.body;
 
+        questionIndex = JSON.parse(questionIndex);
+
         const existInterview = await InterviewModel.findById(interviewId);
 
-        let qaHistory;
+        let parseData;
 
         if (existInterview) {
-            qaHistory = generateQaHistory(existInterview.interviewQAA);
 
 
             const prompt = `
-        You are an experienced technical interviewer reviewing an entire mock interview session.
-        
-        Below is a list of interview questions and the candidate's answers from session ID: ${interviewId}.
-        
-        Based on this overall performance:
-        - Provide a single **evaluation term or short phrase** (e.g., "Exceptional", "Can improve", "Average", "High potential").
-        - Also provide a **numeric rating out of 10** (e.g., 7.0, 8.5, 9.2), based on the candidate’s rating for each answer provided
-        - Do NOT repeat the questions or answers.
-        - Return the response in **strict JSON format** only.
-        
-        Here is the interview session:
-        
-        ${qaHistory}
-        
-        Expected JSON format:
-        {
-          "evaluation": "[Your term here]",
-          "rating": [Your numeric rating here]
-        }
-        `;
-            // - Also provide a **numeric rating out of 10** (e.g., 7.0, 8.5, 9.2), based on the candidate’s rating for each answer provided
-            // - Also provide a **numeric rating out of 10** (e.g., 7.0, 8.5, 9.2), based on the candidate’s clarity, technical depth, relevance, communication, and fit for the role.
+You are an expert technical interviewer and career coach.
+
+Your task is to guide a candidate in answering the following interview question effectively. Based on their resume, skills, job title, and job description, suggest **2–4 short bullet points** the candidate can explore or include in their response.
+
+These points should be written in third person, not as if the candidate is speaking. Think of them as guidance or suggestions — each point should be short (1–2 lines), practical, and tailored to the candidate's background and the job role.
+---
+Interview Question:
+${existInterview.interviewQAA[questionIndex].question}
+
+Candidate Resume:
+${existInterview.resumeText}
+
+Skills:
+${existInterview.skills}
+
+Job Title:
+${existInterview.jobTitle}
+
+Job Description:
+${existInterview.jobTitle}
+---
+
+Return the suggestions in this JSON format:
+
+{
+  "question": "The original interview question",
+  "suggested_points": [
+    "Brief point 1 (e.g., Mention experience working with REST APIs in previous projects)",
+    "Brief point 2 (e.g., Talk about collaboration with cross-functional teams)",
+    ...
+  ],
+  "coach_tip": "Optional short tip (1–2 sentences) on how the candidate can deliver the answer more effectively."
+}
+ `;
 
             const response = await axios.post(
                 'https://api.openai.com/v1/chat/completions',
@@ -649,21 +662,14 @@ export const generateAnswerPrompt = async (
             );
 
             const gptOutput = response.data.choices[0].message.content;
+            parseData = JSON.parse(gptOutput);
 
-            const parseData = JSON.parse(gptOutput);
-
-            const interview = await InterviewModel.findByIdAndUpdate(interviewId, {
-                interviewStatus: InterviewStatus.Completed,
-                duration: totalDuration,
-                rating: parseData['rating'],
-                overallSuccess: parseData['evaluation'],
-            });
         }
 
         return res.status(200).json({
             message: "Interview closed successfully",
-            success: interview != null,
-            result: interview,
+            success: parseData != null,
+            result: parseData,
         });
 
     } catch (e) {

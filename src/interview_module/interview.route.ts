@@ -1,6 +1,6 @@
 import { verifyJwtToken } from "./../utils/middleware/verify-jwt-token";
 import {
-    addInterview, endInterviewSession, getInterviews,
+    addInterview, endInterviewSession, generateAnswerPrompt, getInterviews,
     saveRecording,
     //  saveRecording
 } from "./interview.controller";
